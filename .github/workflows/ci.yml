@@ -1,4 +1,4 @@
-name: CI - Build, QA & Security
+name: CI - QA, Security & Build Validation
 
 on:
   push:
@@ -7,72 +7,83 @@ on:
 
 jobs:
   ci:
-    name: CI Validation
+    name: CI Full Validation
     runs-on: ubuntu-latest
 
     steps:
-      # ------------------------------------
-      # 1. Checkout source code
-      # ------------------------------------
+      # --------------------------------------------------
+      # 1. Checkout Source Code
+      # --------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ------------------------------------
-      # 2. Secret Scanning
-      # ------------------------------------
-      - name: Secret Scan - Trivy
+      # --------------------------------------------------
+      # 2. Secret Scanning (Whole Repo)
+      # --------------------------------------------------
+      - name: Secret Scan - Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          fail: true
+
+      # --------------------------------------------------
+      # 3. SCA - Dependency & License Scan (Whole Repo)
+      # --------------------------------------------------
+      - name: SCA - Trivy Filesystem Scan
         uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: fs
-          scanners: secret
+          scanners: vuln,license
+          severity: HIGH,CRITICAL
           exit-code: 1
 
-      # ------------------------------------
-      # 3. Build & start app (Docker Compose)
-      # ------------------------------------
-      - name: Build and start services
-        run: docker compose up -d --build
+      # --------------------------------------------------
+      # 4. Build Images (Docker Compose)
+      # --------------------------------------------------
+      - name: Build application (Docker Compose)
+        run: docker compose build
 
-      # ------------------------------------
-      # 4. Build Validation
-      # ------------------------------------
-      - name: Verify containers
-        run: docker compose ps
+      # --------------------------------------------------
+      # 5. Start Application for QA Checks
+      # --------------------------------------------------
+      - name: Start application
+        run: docker compose up -d
 
-      # ------------------------------------
-      # 5. QA - Syntax / Lint Check
-      # ------------------------------------
-      - name: QA - PHP syntax check
-        run: docker compose exec -T dvwa php -l index.php
-
-      # ------------------------------------
-      # 6. QA - Unit Testing (Expandable)
-      # ------------------------------------
-      - name: QA - Unit Tests (Placeholder)
+      # --------------------------------------------------
+      # 6. QA - Syntax / Lint Checks (Whole Repo)
+      # --------------------------------------------------
+      - name: QA - PHP Syntax Check
         run: |
-          echo "Add PHPUnit tests here"
+          docker compose exec -T dvwa bash -c \
+          "find . -name '*.php' -exec php -l {} \;"
+
+      # --------------------------------------------------
+      # 7. QA - Unit Tests (Expandable)
+      # --------------------------------------------------
+      - name: QA - Unit Tests
+        run: |
+          echo "Unit tests placeholder"
           # docker compose exec -T dvwa vendor/bin/phpunit
 
-      # ------------------------------------
-      # 7. SAST - Static Code Analysis
-      # ------------------------------------
+      # --------------------------------------------------
+      # 8. SAST - Static Code Analysis (Whole Repo)
+      # --------------------------------------------------
       - name: SAST - Semgrep
         uses: returntocorp/semgrep-action@v1
         with:
           config: auto
 
-      # ------------------------------------
-      # 8. SCA + Misconfiguration Scan
-      # ------------------------------------
-      - name: SCA & Misconfig Scan - Trivy
+      # --------------------------------------------------
+      # 9. Image Security Scan
+      # --------------------------------------------------
+      - name: Image Scan - Trivy
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          scan-type: fs
+          image-ref: dvwa
           severity: HIGH,CRITICAL
           exit-code: 1
 
-      # ------------------------------------
-      # 9. Cleanup
-      # ------------------------------------
-      - name: Stop services
+      # --------------------------------------------------
+      # 10. Cleanup
+      # --------------------------------------------------
+      - name: Cleanup containers
         run: docker compose down
