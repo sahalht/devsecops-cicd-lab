@@ -3,24 +3,51 @@ on:
   pull_request: {}
   push:
     branches:
-    - main
-    - master
+      - main
+      - master
     paths:
-    - .github/workflows/semgrep.yml
+      - .github/workflows/semgrep.yml
   schedule:
-  # random HH:MM to avoid a load spike on GitHub Actions at 00:00
-  - cron: 52 9 * * *
+    - cron: "52 9 * * *"
+
 name: Semgrep
+
 jobs:
   semgrep:
     name: semgrep/ci
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: write   # needed for SARIF (optional)
+
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
     container:
       image: semgrep/semgrep
+
     steps:
-    - uses: actions/checkout@v4
-    - run: semgrep ci
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---- Semgrep scan with report ----
+      - name: Run Semgrep (JSON report)
+        run: |
+          semgrep ci \
+            --json \
+            --output semgrep-report.json
+
+      # ---- Optional: SARIF for GitHub Security tab ----
+      - name: Run Semgrep (SARIF)
+        run: |
+          semgrep ci \
+            --sarif \
+            --output semgrep-report.sarif
+
+      - name: Upload Semgrep reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-reports
+          path: |
+            semgrep-report.json
+            semgrep-report.sarif
