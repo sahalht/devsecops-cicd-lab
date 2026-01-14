@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write   # needed for SARIF (optional)
+      security-events: write   # Required if uploading SARIF to GitHub Security tab
 
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
@@ -30,22 +30,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ---- Semgrep scan with report ----
-      - name: Run Semgrep (JSON report)
+      - name: Run Semgrep
+        # In 2026, it is best practice to generate multiple formats in one pass
+        # --json sets the primary output to JSON
+        # --sarif-output creates the secondary SARIF file simultaneously
         run: |
-          semgrep ci \
-            --json \
-            --output semgrep-report.json
-
-      # ---- Optional: SARIF for GitHub Security tab ----
-      - name: Run Semgrep (SARIF)
-        run: |
-          semgrep ci \
-            --sarif \
-            --output semgrep-report.sarif
+          semgrep ci --json --output semgrep-report.json --sarif-output semgrep-report.sarif
 
       - name: Upload Semgrep reports
         uses: actions/upload-artifact@v4
+        if: always() # Ensures reports are uploaded even if vulnerabilities are found
         with:
           name: semgrep-reports
           path: |
