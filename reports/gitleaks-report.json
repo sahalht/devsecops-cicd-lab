@@ -1,0 +1,23 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 54,
+  "EndLine": 54,
+  "StartColumn": 2,
+  "EndColumn": 45,
+  "Match": "user-token: REDACTED",
+  "Secret": "REDACTED",
+  "File": "vulnerabilities/csrf/help/help.php",
+  "SymlinkFile": "",
+  "Commit": "7e8c9a2400dc2dc2c7b0e3e95b0b077794c0b4b2",
+  "Link": "https://github.com/sahalht/devsecops-cicd-lab/blob/7e8c9a2400dc2dc2c7b0e3e95b0b077794c0b4b2/vulnerabilities/csrf/help/help.php#L54",
+  "Entropy": 3.5192475,
+  "Author": "sahalht",
+  "Email": "muhammeds@heaptrace.com",
+  "Date": "2026-01-12T12:02:46Z",
+  "Message": "Adding the project to remote",
+  "Tags": [],
+  "Fingerprint": "7e8c9a2400dc2dc2c7b0e3e95b0b077794c0b4b2:vulnerabilities/csrf/help/help.php:generic-api-key:54"
+ }
+]

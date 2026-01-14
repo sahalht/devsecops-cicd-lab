@@ -1,0 +1,12 @@
+{
+  "name": "dvwa-devsecops-lab",
+  "version": "1.0.0",
+  "description": "DVWA DevSecOps lab – intentionally vulnerable npm dependencies for Snyk testing",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "4.17.15",
+    "jquery": "1.12.4",
+    "minimist": "0.0.8"
+  }
+}
