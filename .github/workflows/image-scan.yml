@@ -17,40 +17,22 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Ensure Docker Compose is available
-        run: |
-          docker compose version || \
-          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+      - name: Verify Docker Compose
+        run: docker compose version
 
-      # 1️⃣ Build all images from compose.yml
+      # 1️⃣ Build all images
       - name: Build images via Docker Compose
-        run: |
-          docker compose build
+        run: docker compose build
 
-      # 2️⃣ Extract all image names
+      # 2️⃣ Collect image list
       - name: Collect Compose image list
-        id: images
         run: |
           docker compose config --images | sort -u > images.txt
-          echo "Images to scan:"
           cat images.txt
 
-      # 3️⃣ Scan EACH image and output JSON
-      - name: Trivy image scan (JSON output)
+      # 3️⃣ Trivy scan → JSON
+      - name: Trivy image scan (JSON)
         run: |
           mkdir -p trivy-json
           while read image; do
-            echo "🔍 Scanning image: $image"
-            safe_name=$(echo "$image" | tr '/:' '__')
-            trivy image \
-              --format json \
-              -o trivy-json/trivy-$safe_name.json \
-              "$image"
-          done < images.txt
-
-      # 4️⃣ Upload JSON reports only
-      - name: Upload Trivy JSON reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-compose-json-reports
-          path: trivy-json/
+            echo "🔍 Scanni
