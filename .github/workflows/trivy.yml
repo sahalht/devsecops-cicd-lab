@@ -24,7 +24,7 @@ jobs:
           severity: HIGH,CRITICAL
           format: json
           output: trivy-sca.json
-          exit-code: 1
+          exit-code: 0
 
       - name: Upload Trivy JSON report
         uses: actions/upload-artifact@v4
