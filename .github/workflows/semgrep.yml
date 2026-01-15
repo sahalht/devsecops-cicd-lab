@@ -30,13 +30,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Semgrep
-        # Generate HTML report
         run: |
-          semgrep ci --html --output semgrep-report.html
+          semgrep ci --json --output semgrep-report.json
 
-      - name: Upload Semgrep HTML report
+      - name: Upload Semgrep report
         uses: actions/upload-artifact@v4
         if: always() # Ensures report is uploaded even if vulnerabilities are found
         with:
           name: semgrep-report
-          path: semgrep-report.html
+          path: semgrep-report.json
