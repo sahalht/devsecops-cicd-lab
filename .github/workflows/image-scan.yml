@@ -20,19 +20,31 @@ jobs:
       - name: Verify Docker Compose
         run: docker compose version
 
-      # 1️⃣ Build all images
+      # 1️⃣ Build all images defined in compose.yml
       - name: Build images via Docker Compose
         run: docker compose build
 
-      # 2️⃣ Collect image list
+      # 2️⃣ Extract all images (built + referenced)
       - name: Collect Compose image list
         run: |
           docker compose config --images | sort -u > images.txt
+          echo "Images to scan:"
           cat images.txt
 
-      # 3️⃣ Trivy scan → JSON
+      # 3️⃣ Scan each image with Trivy (JSON output)
       - name: Trivy image scan (JSON)
         run: |
+          set -e
           mkdir -p trivy-json
-          while read image; do
-            echo "🔍 Scanni
+          while IFS= read -r image; do
+            echo "Scanning image: $image"
+            safe_name=$(echo "$image" | tr '/:' '__')
+            trivy image --format json -o trivy-json/trivy-${safe_name}.json "$image"
+          done < images.txt
+
+      # 4️⃣ Upload JSON reports
+      - name: Upload Trivy JSON reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-compose-json-reports
+          path: trivy-json/
