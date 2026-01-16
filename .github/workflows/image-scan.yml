@@ -1,4 +1,4 @@
-name: Docker Compose Image Scan (SARIF)
+name: Docker Compose Image Scan (Merged SARIF)
 
 on:
   push:
@@ -11,36 +11,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ------------------------------------------------------------
+      # 1️⃣ Checkout
+      # ------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------
+      # 2️⃣ Docker setup
+      # ------------------------------------------------------------
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
       - name: Verify Docker Compose
         run: docker compose version
 
-      # 🔹 Install Trivy
+      # ------------------------------------------------------------
+      # 3️⃣ Install Trivy (STABLE – no tar pipe)
+      # ------------------------------------------------------------
       - name: Install Trivy
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget jq
-          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.1_Linux-64bit.tar.gz | tar zx
-          sudo mv trivy /usr/local/bin/trivy
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release jq
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
           trivy --version
 
-      # 1️⃣ Build all images
+      # ------------------------------------------------------------
+      # 4️⃣ Build all images from compose.yml
+      # ------------------------------------------------------------
       - name: Build images via Docker Compose
         run: docker compose build
 
-      # 2️⃣ Collect image names
+      # ------------------------------------------------------------
+      # 5️⃣ Collect image list
+      # ------------------------------------------------------------
       - name: Collect Compose image list
         run: |
           docker compose config --images | sort -u > images.txt
           echo "Images to scan:"
           cat images.txt
 
-      # 3️⃣ Scan each image → SARIF
+      # ------------------------------------------------------------
+      # 6️⃣ Scan each image → SARIF
+      # ------------------------------------------------------------
       - name: Trivy image scan (SARIF per image)
         run: |
           set -e
@@ -49,12 +67,15 @@ jobs:
             echo "Scanning image: $image"
             safe_name=$(echo "$image" | tr '/:' '__')
             trivy image \
+              --scanners vuln \
               --format sarif \
               -o trivy-sarif/trivy-${safe_name}.sarif \
               "$image"
           done < images.txt
 
-      # 4️⃣ Merge SARIF files into ONE
+      # ------------------------------------------------------------
+      # 7️⃣ Merge SARIF files into ONE
+      # ------------------------------------------------------------
       - name: Merge SARIF files
         run: |
           echo "Merging SARIF files..."
@@ -64,7 +85,9 @@ jobs:
             $base
           ' trivy-sarif/*.sarif > trivy-merged.sarif
 
-      # 5️⃣ Upload merged SARIF
+      # ------------------------------------------------------------
+      # 8️⃣ Upload merged SARIF artifact
+      # ------------------------------------------------------------
       - name: Upload merged SARIF
         uses: actions/upload-artifact@v4
         with:
