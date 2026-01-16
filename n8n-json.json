@@ -1,0 +1,1368 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs?event=workflow_dispatch&per_page=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f80bf97-eb54-4b02-a82f-86a96925e96c",
+      "name": "Get Latest Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6784,
+        2624
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        7840,
+        2608
+      ],
+      "id": "6df8b607-0b3a-4dff-ba1a-161b8cf82f19",
+      "name": "Decompress Zip1"
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "99815a63-84d3-4a20-a412-91ba9061d79c",
+      "name": "Wait 30s2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        6928,
+        2640
+      ],
+      "webhookId": "9b5ac1ab-f22e-4919-af6d-05f33a5a3e60"
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.workflow_runs[0].id}` }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "id": "14e36966-ab4a-40fc-a156-67520a4e7c29",
+      "name": "Check Run Status2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7136,
+        2640
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.id}/artifacts` }}",
+        "options": {}
+      },
+      "id": "9320e6a8-2496-4d94-ab3c-f400e0e6c813",
+      "name": "List Artifacts2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7360,
+        2640
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/artifacts/{{$json.artifacts[0].id}}/zip",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+zip"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "613223ba-7593-41c5-ac2a-2a2c3bbef277",
+      "name": "Download Artifact2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7552,
+        2624
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/workflows/semgrep.yml/dispatches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"ref\": \"main\"}",
+        "options": {}
+      },
+      "id": "062dad49-9719-4fbf-8482-77312fa71689",
+      "name": "Trigger SAST Workflow2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6560,
+        2640
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8080/api/v2/import-scan/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 62fffb701219ce77024b2d9502ecefc069923959"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "product_name",
+              "value": "DVWA"
+            },
+            {
+              "name": "engagement_name",
+              "value": "sast"
+            },
+            {
+              "name": "scan_type",
+              "value": "Semgrep JSON Report"
+            },
+            {
+              "name": "active",
+              "value": "true"
+            },
+            {
+              "name": "verified",
+              "value": "true"
+            },
+            {
+              "name": "minimum_severity",
+              "value": "Info"
+            },
+            {
+              "name": "close_old_findings",
+              "value": "false"
+            },
+            {
+              "name": "push_to_jira",
+              "value": "false"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file_0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8080,
+        2736
+      ],
+      "id": "fac09361-1dc8-467a-b92b-fe4f0e7a93ba",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs?event=workflow_dispatch&per_page=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5be73f8b-5ce5-4af6-8d99-10ab882f1da3",
+      "name": "Get Latest Run1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6832,
+        3024
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        7840,
+        2992
+      ],
+      "id": "b3a5e8f0-2d7a-4891-8061-97be5d4e7e23",
+      "name": "Decompress Zip2"
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "4e276b83-9118-4fff-8844-a73f151fae44",
+      "name": "Wait 30s3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        6992,
+        3008
+      ],
+      "webhookId": "9b5ac1ab-f22e-4919-af6d-05f33a5a3e60"
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.workflow_runs[0].id}` }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "id": "4f66eb29-6db7-4b7b-bd63-c3e22593d959",
+      "name": "Check Run Status3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7184,
+        3024
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.id}/artifacts` }}",
+        "options": {}
+      },
+      "id": "49fdf06b-6c4f-4808-a0a7-31e8eefe027c",
+      "name": "List Artifacts3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7392,
+        3008
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/artifacts/{{$json.artifacts[0].id}}/zip",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+zip"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "b557ec27-0902-419d-9268-78b7aca09b50",
+      "name": "Download Artifact3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7600,
+        2992
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/workflows/snyk.yml/dispatches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"ref\": \"main\"}",
+        "options": {}
+      },
+      "id": "fa056aba-d407-4156-87cc-a279a5bba88b",
+      "name": "Trigger SAST Workflow3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6544,
+        3056
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 🔐 **SCA**\n\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        7088,
+        2912
+      ],
+      "typeVersion": 1,
+      "id": "a6570c87-8c18-4775-8d94-2844d792fc21",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8080/api/v2/import-scan/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 62fffb701219ce77024b2d9502ecefc069923959"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "product_name",
+              "value": "DVWA"
+            },
+            {
+              "name": "engagement_name",
+              "value": "SCA"
+            },
+            {
+              "name": "scan_type",
+              "value": "Snyk Scan"
+            },
+            {
+              "name": "active",
+              "value": "true"
+            },
+            {
+              "name": "verified",
+              "value": "true"
+            },
+            {
+              "name": "minimum_severity",
+              "value": "Info"
+            },
+            {
+              "name": "close_old_findings",
+              "value": "false"
+            },
+            {
+              "name": "push_to_jira",
+              "value": "false"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file_0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8096,
+        3040
+      ],
+      "id": "6c99848e-d05e-40e7-86f7-feecc6c56897",
+      "name": "Upload to defectdojo"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs?event=workflow_dispatch&per_page=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8fb6e56d-19ce-4a31-909f-55eee75277f6",
+      "name": "Get Latest Run2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6720,
+        3392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        7712,
+        3392
+      ],
+      "id": "049786cb-6c84-4a57-991e-d603bb68de74",
+      "name": "Decompress Zip3"
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "b25a89ee-82c2-4ecb-8235-7f74b721d864",
+      "name": "Wait 30s4",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        6880,
+        3392
+      ],
+      "webhookId": "9b5ac1ab-f22e-4919-af6d-05f33a5a3e60"
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.workflow_runs[0].id}` }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "id": "dc511457-e4ec-49e6-abbe-eb12d01bad20",
+      "name": "Check Run Status4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7056,
+        3392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.id}/artifacts` }}",
+        "options": {}
+      },
+      "id": "5c97c5a0-a2c4-471d-b62b-eeaef95b3881",
+      "name": "List Artifacts4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7248,
+        3392
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/artifacts/{{$json.artifacts[0].id}}/zip",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+zip"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "c0ed4163-a7d3-466c-81e1-e6c0fdb1174f",
+      "name": "Download Artifact4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7504,
+        3392
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/workflows/secret-scan.yml/dispatches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"ref\": \"main\"}",
+        "options": {}
+      },
+      "id": "fa3503d0-250a-4b0b-8de1-11a7169c3d36",
+      "name": "Trigger SAST Workflow4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6544,
+        3392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 🔐 **SECRET  SCANNING**\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        7120,
+        3312
+      ],
+      "typeVersion": 1,
+      "id": "7e7c796e-4d23-4215-aa12-ea2cf1a06a46",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8080/api/v2/import-scan/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 62fffb701219ce77024b2d9502ecefc069923959"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "product_name",
+              "value": "DVWA"
+            },
+            {
+              "name": "engagement_name",
+              "value": "Secret Scan"
+            },
+            {
+              "name": "scan_type",
+              "value": "SARIF"
+            },
+            {
+              "name": "active",
+              "value": "true"
+            },
+            {
+              "name": "verified",
+              "value": "true"
+            },
+            {
+              "name": "minimum_severity",
+              "value": "Info"
+            },
+            {
+              "name": "close_old_findings",
+              "value": "true"
+            },
+            {
+              "name": "push_to_jira",
+              "value": "true"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file_0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8064,
+        3392
+      ],
+      "id": "af156ee0-b614-4435-bb32-b37487ab4175",
+      "name": "Upload to defectdojo1"
+    },
+    {
+      "parameters": {
+        "content": "# 🔐 **SAST**\n## **Static Application Security Testing**\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        7072,
+        2480
+      ],
+      "typeVersion": 1,
+      "id": "76a0ee20-df2f-454a-baa2-5e4183a21687",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs?event=workflow_dispatch&per_page=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2546d28e-bd01-4732-bf99-82eaca129ff5",
+      "name": "Get Latest Run3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6720,
+        3744
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        7744,
+        3776
+      ],
+      "id": "90e677df-0188-4fe4-bfcc-121de0ef9b67",
+      "name": "Decompress Zip4"
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.workflow_runs[0].id}` }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "id": "61d70fa8-ffad-4117-9005-57b0ed002e7a",
+      "name": "Check Run Status5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7056,
+        3744
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/runs/${$json.id}/artifacts` }}",
+        "options": {}
+      },
+      "id": "f4b1e9f8-4334-4a75-a7c4-2c67b8b67545",
+      "name": "List Artifacts5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7248,
+        3744
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/artifacts/{{$json.artifacts[0].id}}/zip",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+zip"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "3e262176-34bf-46f2-a64d-386bd8873b6c",
+      "name": "Download Artifact5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7504,
+        3744
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/sahalht/devsecops-cicd-lab/actions/workflows/image-scan.yml/dispatches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"ref\": \"main\"}",
+        "options": {}
+      },
+      "id": "77e44340-d296-48e1-98e8-bf33d429776d",
+      "name": "Trigger SAST Workflow5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6544,
+        3744
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "HqGpk9npIVyGUW3I",
+          "name": "Bearer Auth account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 🔐 **IMAGE SCANNING**\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        7120,
+        3664
+      ],
+      "typeVersion": 1,
+      "id": "b2a5760b-168d-43e2-acd4-1f841eea2512",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8080/api/v2/import-scan/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 62fffb701219ce77024b2d9502ecefc069923959"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "product_name",
+              "value": "DVWA"
+            },
+            {
+              "name": "engagement_name",
+              "value": "image-scan"
+            },
+            {
+              "name": "scan_type",
+              "value": "Trivy Scan"
+            },
+            {
+              "name": "active",
+              "value": "true"
+            },
+            {
+              "name": "verified",
+              "value": "true"
+            },
+            {
+              "name": "minimum_severity",
+              "value": "Info"
+            },
+            {
+              "name": "close_old_findings",
+              "value": "true"
+            },
+            {
+              "name": "push_to_jira",
+              "value": "false"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "=={{ Object.keys($binary)[0] }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8240,
+        3760
+      ],
+      "id": "d9095c6c-7aa3-435c-a6c8-75f5550426ac",
+      "name": "Upload to defectdojo2"
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "id": "1fa4314a-a393-46c3-822a-5153e0f73040",
+      "name": "Wait 3 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        6880,
+        3744
+      ],
+      "webhookId": "9b5ac1ab-f22e-4919-af6d-05f33a5a3e60"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        7952,
+        3776
+      ],
+      "id": "45eb8a4c-649c-41a5-b029-c5cb13ee8f88",
+      "name": "Loop Over Items"
+    }
+  ],
+  "connections": {
+    "Get Latest Run": {
+      "main": [
+        [
+          {
+            "node": "Wait 30s2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Zip1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30s2": {
+      "main": [
+        [
+          {
+            "node": "Check Run Status2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Run Status2": {
+      "main": [
+        [
+          {
+            "node": "List Artifacts2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Artifacts2": {
+      "main": [
+        [
+          {
+            "node": "Download Artifact2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Artifact2": {
+      "main": [
+        [
+          {
+            "node": "Decompress Zip1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger SAST Workflow2": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Run1": {
+      "main": [
+        [
+          {
+            "node": "Wait 30s3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Zip2": {
+      "main": [
+        [
+          {
+            "node": "Upload to defectdojo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30s3": {
+      "main": [
+        [
+          {
+            "node": "Check Run Status3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Run Status3": {
+      "main": [
+        [
+          {
+            "node": "List Artifacts3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Artifacts3": {
+      "main": [
+        [
+          {
+            "node": "Download Artifact3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Artifact3": {
+      "main": [
+        [
+          {
+            "node": "Decompress Zip2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger SAST Workflow3": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Run1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Run2": {
+      "main": [
+        [
+          {
+            "node": "Wait 30s4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Zip3": {
+      "main": [
+        [
+          {
+            "node": "Upload to defectdojo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30s4": {
+      "main": [
+        [
+          {
+            "node": "Check Run Status4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Run Status4": {
+      "main": [
+        [
+          {
+            "node": "List Artifacts4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Artifacts4": {
+      "main": [
+        [
+          {
+            "node": "Download Artifact4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Artifact4": {
+      "main": [
+        [
+          {
+            "node": "Decompress Zip3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger SAST Workflow4": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Run2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to defectdojo1": {
+      "main": [
+        []
+      ]
+    },
+    "Get Latest Run3": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Zip4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Run Status5": {
+      "main": [
+        [
+          {
+            "node": "List Artifacts5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Artifacts5": {
+      "main": [
+        [
+          {
+            "node": "Download Artifact5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Artifact5": {
+      "main": [
+        [
+          {
+            "node": "Decompress Zip4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger SAST Workflow5": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Run3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to defectdojo2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check Run Status5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Upload to defectdojo2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "348cab47c2ff469196e1ebf52de00089ea70b7ded62ec0597094957b442347ee"
+  }
+}
