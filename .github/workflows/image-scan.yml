@@ -1,4 +1,4 @@
-name: Docker Compose Image Scan (JSON)
+name: Docker Compose Image Scan (SARIF)
 
 on:
   push:
@@ -20,45 +20,53 @@ jobs:
       - name: Verify Docker Compose
         run: docker compose version
 
-      # 🔹 INSTALL TRIVY BINARY (THIS IS THE REAL FIX)
+      # 🔹 Install Trivy
       - name: Install Trivy
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
+          sudo apt-get install -y wget jq
+          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.1_Linux-64bit.tar.gz | tar zx
+          sudo mv trivy /usr/local/bin/trivy
           trivy --version
 
-      # 1️⃣ Build all images from compose.yml
+      # 1️⃣ Build all images
       - name: Build images via Docker Compose
         run: docker compose build
 
-      # 2️⃣ Collect all image names
+      # 2️⃣ Collect image names
       - name: Collect Compose image list
         run: |
           docker compose config --images | sort -u > images.txt
           echo "Images to scan:"
           cat images.txt
 
-      # 3️⃣ Scan each image with Trivy (JSON output)
-      - name: Trivy image scan (JSON)
+      # 3️⃣ Scan each image → SARIF
+      - name: Trivy image scan (SARIF per image)
         run: |
           set -e
-          mkdir -p trivy-json
+          mkdir -p trivy-sarif
           while IFS= read -r image; do
             echo "Scanning image: $image"
             safe_name=$(echo "$image" | tr '/:' '__')
             trivy image \
-              --format json \
-              -o trivy-json/trivy-${safe_name}.json \
+              --format sarif \
+              -o trivy-sarif/trivy-${safe_name}.sarif \
               "$image"
           done < images.txt
 
-      # 4️⃣ Upload JSON reports
-      - name: Upload Trivy JSON reports
+      # 4️⃣ Merge SARIF files into ONE
+      - name: Merge SARIF files
+        run: |
+          echo "Merging SARIF files..."
+          jq -s '
+            .[0] as $base |
+            $base.runs = ([.[].runs[]]) |
+            $base
+          ' trivy-sarif/*.sarif > trivy-merged.sarif
+
+      # 5️⃣ Upload merged SARIF
+      - name: Upload merged SARIF
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-compose-json-reports
-          path: trivy-json/
+          name: trivy-compose-merged-sarif
+          path: trivy-merged.sarif
