@@ -20,11 +20,22 @@ jobs:
       - name: Verify Docker Compose
         run: docker compose version
 
-      # 1️⃣ Build all images defined in compose.yml
+      # 🔹 INSTALL TRIVY BINARY (THIS IS THE REAL FIX)
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+          trivy --version
+
+      # 1️⃣ Build all images from compose.yml
       - name: Build images via Docker Compose
         run: docker compose build
 
-      # 2️⃣ Extract all images (built + referenced)
+      # 2️⃣ Collect all image names
       - name: Collect Compose image list
         run: |
           docker compose config --images | sort -u > images.txt
@@ -39,7 +50,10 @@ jobs:
           while IFS= read -r image; do
             echo "Scanning image: $image"
             safe_name=$(echo "$image" | tr '/:' '__')
-            trivy image --format json -o trivy-json/trivy-${safe_name}.json "$image"
+            trivy image \
+              --format json \
+              -o trivy-json/trivy-${safe_name}.json \
+              "$image"
           done < images.txt
 
       # 4️⃣ Upload JSON reports
