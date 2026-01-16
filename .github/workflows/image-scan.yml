@@ -1,4 +1,4 @@
-name: Docker Compose Image Scan (Merged SARIF)
+name: Docker Compose Image Scan (Merged JSON)
 
 on:
   push:
@@ -57,41 +57,41 @@ jobs:
           cat images.txt
 
       # ------------------------------------------------------------
-      # 6️⃣ Scan each image → SARIF
+      # 6️⃣ Scan each image → JSON
       # ------------------------------------------------------------
-      - name: Trivy image scan (SARIF per image)
+      - name: Trivy image scan (JSON per image)
         run: |
           set -e
-          mkdir -p trivy-sarif
+          mkdir -p trivy-json
           while IFS= read -r image; do
             echo "Scanning image: $image"
             safe_name=$(echo "$image" | tr '/:' '__')
             trivy image \
               --scanners vuln \
-              --format sarif \
-              -o trivy-sarif/trivy-${safe_name}.sarif \
+              --format json \
+              -o trivy-json/trivy-${safe_name}.json \
               "$image"
           done < images.txt
 
       # ------------------------------------------------------------
-      # 7️⃣ Merge SARIF files into ONE (FIXED & SPEC-COMPLIANT)
+      # 7️⃣ Merge Trivy JSON files into ONE
       # ------------------------------------------------------------
-      - name: Merge SARIF files
+      - name: Merge Trivy JSON files
         run: |
-          echo "Merging SARIF files..."
+          echo "Merging Trivy JSON files..."
           jq -s '
             {
-              version: .[0].version,
-              "$schema": .[0]["$schema"],
-              runs: [ .[].runs[] ]
+              SchemaVersion: .[0].SchemaVersion,
+              ArtifactType: "container_image",
+              Results: [ .[].Results[] ]
             }
-          ' trivy-sarif/*.sarif > trivy-merged.sarif
+          ' trivy-json/*.json > trivy-merged.json
 
       # ------------------------------------------------------------
-      # 8️⃣ Upload merged SARIF artifact
+      # 8️⃣ Upload merged JSON artifact
       # ------------------------------------------------------------
-      - name: Upload merged SARIF
+      - name: Upload merged Trivy JSON
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-compose-merged-sarif
-          path: trivy-merged.sarif
+          name: trivy-compose-merged-json
+          path: trivy-merged.json
