@@ -7,6 +7,6 @@
   "dependencies": {
     "lodash": "4.17.15",
     "jquery": "1.12.4",
-    "minimist": "0.0.8"
+    "minimist": "0.2.4"
   }
 }
